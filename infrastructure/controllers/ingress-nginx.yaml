@@ -39,3 +39,8 @@ spec:
         type: "NodePort"
     admissionWebhooks:
       enabled: false
+      patch:
+        enabled: false
+    defaultBackend:
+      image:
+        registry: docker.iranrepo.ir
