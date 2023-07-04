@@ -3,7 +3,7 @@ kind: Kustomization
 namespace: podinfo
 resources:
   - ../base/podinfo
-  # - ./svc1
+  - ./svc1
 patches:
   - path: podinfo-values.yaml
     target:
