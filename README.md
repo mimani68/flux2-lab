@@ -1,21 +1,6 @@
-# flux2-kustomize-helm-example
+# Cluster Infra and applications deployment
 
-[![test](https://github.com/fluxcd/flux2-kustomize-helm-example/workflows/test/badge.svg)](https://github.com/fluxcd/flux2-kustomize-helm-example/actions)
-[![e2e](https://github.com/fluxcd/flux2-kustomize-helm-example/workflows/e2e/badge.svg)](https://github.com/fluxcd/flux2-kustomize-helm-example/actions)
-[![license](https://img.shields.io/github/license/fluxcd/flux2-kustomize-helm-example.svg)](https://github.com/fluxcd/flux2-kustomize-helm-example/blob/main/LICENSE)
-
-For this example we assume a scenario with two clusters: staging and production.
-The end goal is to leverage Flux and Kustomize to manage both clusters while minimizing duplicated declarations.
-
-We will configure Flux to install, test and upgrade a demo app using
-`HelmRepository` and `HelmRelease` custom resources.
-Flux will monitor the Helm repository, and it will automatically
-upgrade the Helm releases to their latest chart version based on semver ranges.
-
-![flux-ui-apps.png](.github/screens/flux-ui-apps.png)
-
-On each cluster, we'll install [Weave GitOps](https://docs.gitops.weave.works/) (an OSS UI for Flux)
-to visualise and monitor the workloads managed by Flux.
+> In this project we use FluxCD
 
 ## Prerequisites
 
@@ -62,185 +47,7 @@ The Git repository contains the following top directories:
 
 ### Applications
 
-The apps configuration is structured into:
-
-- **apps/base/** dir contains namespaces and Helm release definitions
-- **apps/production/** dir contains the production Helm release values
-- **apps/staging/** dir contains the staging values
-
-```
-./apps/
-├── base
-│   └── podinfo
-│       ├── kustomization.yaml
-│       ├── namespace.yaml
-│       ├── release.yaml
-│       └── repository.yaml
-├── production
-│   ├── kustomization.yaml
-│   └── podinfo-patch.yaml
-└── staging
-    ├── kustomization.yaml
-    └── podinfo-patch.yaml
-```
-
-In **apps/base/podinfo/** dir we have a Flux `HelmRelease` with common values for both clusters:
-
-```yaml
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
-kind: HelmRelease
-metadata:
-  name: podinfo
-  namespace: podinfo
-spec:
-  releaseName: podinfo
-  chart:
-    spec:
-      chart: podinfo
-      sourceRef:
-        kind: HelmRepository
-        name: podinfo
-        namespace: flux-system
-  interval: 50m
-  values:
-    ingress:
-      enabled: true
-      className: nginx
-```
-
-In **apps/staging/** dir we have a Kustomize patch with the staging specific values:
-
-```yaml
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
-kind: HelmRelease
-metadata:
-  name: podinfo
-spec:
-  chart:
-    spec:
-      version: ">=1.0.0-alpha"
-  test:
-    enable: true
-  values:
-    ingress:
-      hosts:
-        - host: podinfo.staging
-```
-
-Note that with ` version: ">=1.0.0-alpha"` we configure Flux to automatically upgrade
-the `HelmRelease` to the latest chart version including alpha, beta and pre-releases.
-
-In **apps/production/** dir we have a Kustomize patch with the production specific values:
-
-```yaml
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
-kind: HelmRelease
-metadata:
-  name: podinfo
-  namespace: podinfo
-spec:
-  chart:
-    spec:
-      version: ">=1.0.0"
-  values:
-    ingress:
-      hosts:
-        - host: podinfo.production
-```
-
-Note that with ` version: ">=1.0.0"` we configure Flux to automatically upgrade
-the `HelmRelease` to the latest stable chart version (alpha, beta and pre-releases will be ignored).
-
 ### Infrastructure
-
-The infrastructure is structured into:
-
-- **infrastructure/controllers/** dir contains namespaces and Helm release definitions for Kubernetes controllers
-- **infrastructure/configs/** dir contains Kubernetes custom resources such as cert issuers and networks policies
-
-```
-./infrastructure/
-├── configs
-│   ├── cluster-issuers.yaml
-│   ├── network-policies.yaml
-│   └── kustomization.yaml
-└── controllers
-    ├── cert-manager.yaml
-    ├── ingress-nginx.yaml
-    ├── weave-gitops.yaml
-    └── kustomization.yaml
-```
-
-In **infrastructure/controllers/** dir we have the Flux `HelmRepository` and `HelmRelease` definitions such as:
-
-```yaml
-apiVersion: helm.toolkit.fluxcd.io/v2beta1
-kind: HelmRelease
-metadata:
-  name: cert-manager
-  namespace: cert-manager
-spec:
-  interval: 30m
-  chart:
-    spec:
-      chart: cert-manager
-      version: "1.x"
-      sourceRef:
-        kind: HelmRepository
-        name: cert-manager
-        namespace: cert-manager
-      interval: 12h
-  values:
-    installCRDs: true
-```
-
-Note that with ` interval: 12h` we configure Flux to pull the Helm repository index every twelfth hours to check for updates.
-If the new chart version that matches the `1.x` semver range is found, Flux will upgrade the release.
-
-In **infrastructure/configs/** dir we have Kubernetes custom resources, such as the Let's Encrypt issuer:
-
-```yaml
-apiVersion: cert-manager.io/v1
-kind: ClusterIssuer
-metadata:
-  name: letsencrypt
-spec:
-  acme:
-    # Replace the email address with your own contact email
-    email: fluxcdbot@users.noreply.github.com
-    server: https://acme-staging-v02.api.letsencrypt.org/directory
-    privateKeySecretRef:
-      name: letsencrypt-nginx
-    solvers:
-      - http01:
-          ingress:
-            class: nginx
-```
-
-In **clusters/production/infrastructure.yaml** we replace the Let's Encrypt server value to point to the production API:
-
-```yaml
-apiVersion: kustomize.toolkit.fluxcd.io/v1
-kind: Kustomization
-metadata:
-  name: infra-configs
-  namespace: flux-system
-spec:
-  # ...omitted for brevity
-  dependsOn:
-    - name: infra-controllers
-  patches:
-    - patch: |
-        - op: replace
-          path: /spec/acme/server
-          value: https://acme-v02.api.letsencrypt.org/directory
-      target:
-        kind: ClusterIssuer
-        name: letsencrypt
-```
-
-Note that with `dependsOn` we tell Flux to first install or upgrade the controllers and only then the configs.
-This ensures that the Kubernetes CRDs are registered on the cluster, before Flux applies any custom resources.
 
 ## Bootstrap staging and production
 
@@ -255,31 +62,9 @@ The clusters dir contains the Flux configuration:
     ├── apps.yaml
     └── infrastructure.yaml
 ```
+## Initialize operation
 
-In **clusters/staging/** dir we have the Flux Kustomization definitions, for example:
-
-```yaml
-apiVersion: kustomize.toolkit.fluxcd.io/v1
-kind: Kustomization
-metadata:
-  name: apps
-  namespace: flux-system
-spec:
-  interval: 10m0s
-  dependsOn:
-    - name: infra-configs
-  sourceRef:
-    kind: GitRepository
-    name: flux-system
-  path: ./apps/staging
-  prune: true
-  wait: true
-```
-
-Note that with `path: ./apps/staging` we configure Flux to sync the staging Kustomize overlay and 
-with `dependsOn` we tell Flux to create the infrastructure items before deploying the apps.
-
-Fork this repository on your personal GitHub account and export your GitHub access token, username and repo name:
+### STAGE
 
 ```sh
 export GITHUB_TOKEN=<your-token>
@@ -303,35 +88,15 @@ flux bootstrap github \
     --personal \
     --path=clusters/staging
 ```
-
-The bootstrap command commits the manifests for the Flux components in `clusters/staging/flux-system` dir
-and creates a deploy key with read-only access on GitHub, so it can pull changes inside the cluster.
-
-Watch for the Helm releases being installed on staging:
+other applicable commands are
 
 ```console
+$ flux get kustomizations --watch
 $ watch flux get helmreleases --all-namespaces
-
-NAMESPACE    	NAME         	REVISION	SUSPENDED	READY	MESSAGE 
-cert-manager 	cert-manager 	v1.11.0 	False    	True 	Release reconciliation succeeded
-flux-system  	weave-gitops 	4.0.12   	False    	True 	Release reconciliation succeeded
-ingress-nginx	ingress-nginx	4.4.2   	False    	True 	Release reconciliation succeeded
-podinfo      	podinfo      	6.3.0   	False    	True 	Release reconciliation succeeded
 ```
 
-Verify that the demo app can be accessed via ingress:
 
-```console
-$ kubectl -n ingress-nginx port-forward svc/ingress-nginx-controller 8080:80 &
-
-$ curl -H "Host: podinfo.staging" http://localhost:8080
-{
-  "hostname": "podinfo-59489db7b5-lmwpn",
-  "version": "6.2.3"
-}
-```
-
-Bootstrap Flux on production by setting the context and path to your production cluster:
+### Production
 
 ```sh
 flux bootstrap github \
@@ -343,19 +108,7 @@ flux bootstrap github \
     --path=clusters/production
 ```
 
-Watch the production reconciliation:
-
-```console
-$ flux get kustomizations --watch
-
-NAME             	REVISION     	SUSPENDED	READY	MESSAGE                         
-apps             	main/696182e	False    	True 	Applied revision: main/696182e	
-flux-system      	main/696182e	False    	True 	Applied revision: main/696182e	
-infra-configs    	main/696182e	False    	True 	Applied revision: main/696182e	
-infra-controllers	main/696182e	False    	True 	Applied revision: main/696182e	
-```
-
-### Access the Flux UI
+## Access the Flux UI
 
 To access the Flux UI on a cluster, first start port forwarding with:
 

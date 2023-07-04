@@ -3,7 +3,3 @@ kind: Kustomization
 namespace: echo
 resources:
   - echo.yaml
-# patches:
-#   - path: podinfo-values.yaml
-#     target:
-#       kind: HelmRelease
