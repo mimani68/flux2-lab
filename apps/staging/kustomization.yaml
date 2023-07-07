@@ -2,12 +2,24 @@ apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
   # - ../base/podinfo
-  - ./echo
-  - ./jinz
-  - ./landing
-  - ./nlp
-  - ./webcrawler
-# patches:
+  # - ../base/echo
+  # - ../base/jinz
+  - ../base/landing
+  # - ../base/nlp
+  # - ../base/webcrawler
+patches:
 #   - path: podinfo-values.yaml
 #     target:
 #       kind: HelmRelease
+  - target:
+      kind: Ingress
+      name: landing
+      namespace: jinz-staging
+    patch: |
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: landing
+      spec:
+        rules:
+        - host: staging.app.io
