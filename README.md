@@ -1,26 +1,16 @@
 # Cluster Infra and applications deployment
 
-> In this project we use FluxCD
-
 ## Prerequisites
 
-You will need a Kubernetes cluster version 1.21 or newer.
-For a quick local test, you can use [Kubernetes kind](https://kind.sigs.k8s.io/docs/user/quick-start/).
-Any other Kubernetes setup will work as well though.
+* You will need a Kubernetes cluster version 1.21 or newer. Any other Kubernetes setup will work as well though.
 
-In order to follow the guide you'll need a GitHub account and a
+* In order to follow the guide you'll need a GitHub account and a
 [personal access token](https://help.github.com/en/github/authenticating-to-github/creating-a-personal-access-token-for-the-command-line)
 that can create repositories (check all permissions under `repo`).
 
-Install the Flux CLI on MacOS or Linux using Homebrew:
+* Install the Flux CLI on MacOS or Linux using Homebrew or install the CLI by downloading precompiled binaries using a Bash script:
 
-```sh
-brew install fluxcd/tap/flux
-```
-
-Or install the CLI by downloading precompiled binaries using a Bash script:
-
-```sh
+```bash
 curl -s https://fluxcd.io/install.sh | sudo bash
 ```
 
@@ -46,23 +36,28 @@ The Git repository contains the following top directories:
 ```
 ## Initialize operation
 
-### STAGE
+### Cluster bootstraping
 
-```sh
+#### 1. Defining credentials
+
+```bash
 export GITHUB_TOKEN=<your-token>
 export GITHUB_USER=<your-username>
 export GITHUB_REPO=<repository-name>
 ```
+#### 2. Check flux command line
 
 Verify that your staging cluster satisfies the prerequisites with:
 
-```sh
+```bash
 flux check --pre
 ```
 
+#### 3. Initiate cluster
+
 Set the kubectl context to your staging cluster and bootstrap Flux:
 
-```sh
+```bash
 flux bootstrap github \
     --owner=${GITHUB_USER} \
     --repository=${GITHUB_REPO} \
@@ -70,31 +65,28 @@ flux bootstrap github \
     --personal \
     --path=clusters/staging
 ```
-other applicable commands are
 
-```console
-$ flux get kustomizations --watch
-$ watch flux get helmreleases --all-namespaces
-$ flux reconcile source git flux-system
+> For other environments just change `--path=clusters/<ENV-NAME>` like `--path=clusters/production`
+
+#### 4. Manual force for implement changes  
+
+```bash
+flux reconcile source git flux-system
+flux reconcile kustomization apps
 ```
 
-### Production
+Other applicable commands are
 
-```sh
-flux bootstrap github \
-    --context=production \
-    --owner=${GITHUB_USER} \
-    --repository=${GITHUB_REPO} \
-    --branch=main \
-    --personal \
-    --path=clusters/production
+```bash
+flux get kustomizations --watch
+watch flux get helmreleases --all-namespaces
 ```
 
 ## Access the Flux UI
 
 To access the Flux UI on a cluster, first start port forwarding with:
 
-```sh
+```bash
 kubectl -n flux-system port-forward svc/weave-gitops 9001:9001
 ```
 
@@ -136,20 +128,20 @@ To configure OIDC with Dex and GitHub please see this [guide](https://docs.gitop
 
 If you want to add a cluster to your fleet, first clone your repo locally:
 
-```sh
+```bash
 git clone https://github.com/${GITHUB_USER}/${GITHUB_REPO}.git
 cd ${GITHUB_REPO}
 ```
 
 Create a dir inside `clusters` with your cluster name:
 
-```sh
+```bash
 mkdir -p clusters/dev
 ```
 
 Copy the sync manifests from staging:
 
-```sh
+```bash
 cp clusters/staging/infrastructure.yaml clusters/dev
 cp clusters/staging/apps.yaml clusters/dev
 ```
@@ -159,13 +151,13 @@ to change the `spec.path` inside `clusters/dev/apps.yaml` to `path: ./apps/dev`.
 
 Push the changes to the main branch:
 
-```sh
+```bash
 git add -A && git commit -m "add dev cluster" && git push
 ```
 
 Set the kubectl context and path to your dev cluster and bootstrap Flux:
 
-```sh
+```bash
 flux bootstrap github \
     --context=dev \
     --owner=${GITHUB_USER} \
@@ -182,7 +174,7 @@ e.g. `production-clone` and reuse the `production` definitions.
 
 Bootstrap the `production-clone` cluster:
 
-```sh
+```bash
 flux bootstrap github \
     --context=production-clone \
     --owner=${GITHUB_USER} \
@@ -194,7 +186,7 @@ flux bootstrap github \
 
 Pull the changes locally:
 
-```sh
+```bash
 git pull origin main
 ```
 
@@ -214,13 +206,13 @@ the `infrastructure` and `apps` manifests from the production dir.
 
 Push the changes to the main branch:
 
-```sh
+```bash
 git add -A && git commit -m "add production clone" && git push
 ```
 
 Tell Flux to deploy the production workloads on the `production-clone` cluster:
 
-```sh
+```bash
 flux reconcile kustomization flux-system \
     --context=production-clone \
     --with-source 

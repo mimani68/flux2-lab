@@ -1,62 +1,66 @@
 # apiVersion: v1
 # kind: Namespace
 # metadata:
-#   name: echo
+#   name: jinz-staging
 # ---
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: landing
+  name: webcrawler
   namespace: jinz-staging
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app: landing
+      app: webcrawler
       version: "1"
   template:
     metadata:
       labels:
-        app: landing
+        app: webcrawler
         version: "1"
     spec:
       containers:
-      - name: landing
+      - name: webcrawler
         image: docker.iranrepo.ir/nginx:latest
+        env:
+          - name: SERVER_PORT
+            value: 4000
         ports:
-        - containerPort: 80
+        - containerPort: 4000
 ---
 apiVersion: v1
 kind: Service
 metadata:
-  name: landing
+  name: webcrawler
   namespace: jinz-staging
 spec:
   ports:
-  - port: 80
-    targetPort: 80
+  - name: http
+    port: 80
+    targetPort: 4000
     protocol: TCP
   selector:
-    app: landing
+    app: webcrawler
     version: "1"
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
-  name: landing
+  name: webcrawler
   namespace: jinz-staging
   annotations:
     kubernetes.io/ingress.class: "nginx"
     # nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
   rules:
-  - host: app.io
+  - host: webcrawler.staging.app.io
     http:
       paths:
       - path: /
         pathType: Prefix
         backend:
           service: 
-            name: landing
+            name: webcrawler
             port: 
-              number: 80
+              name: http
