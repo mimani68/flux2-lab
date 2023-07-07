@@ -3,6 +3,7 @@ kind: Kustomization
 resources:
   - ../base/podinfo
   - ./echo
+  - ./landing
 patches:
   - path: podinfo-values.yaml
     target:
