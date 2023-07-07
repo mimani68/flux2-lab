@@ -9,9 +9,11 @@ resources:
   - ../base/webcrawler
 namespace: jinz-staging # alter to namespace
 patches:
+
 #   - path: podinfo-values.yaml
 #     target:
 #       kind: HelmRelease
+
   - target:
       kind: Deployment
       name: landing
@@ -24,6 +26,11 @@ patches:
         namespace: jinz-staging
       spec:
         replicas: 1
+        template:
+          spec:
+            containers:
+              - name: landing
+                image: docker.iranrepo.ir/nginx:1.20
 
   - target:
       kind: Deployment
