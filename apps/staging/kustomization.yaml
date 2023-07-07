@@ -12,6 +12,29 @@ patches:
 #     target:
 #       kind: HelmRelease
   - target:
+      kind: Deployment
+      name: landing
+      # namespace: jinz-base
+    patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: landing
+        namespace: jinz-staging
+      spec:
+        replicas: 1
+
+  - target:
+      kind: Service
+      name: landing
+    patch: |
+      apiVersion: v1
+      kind: Service
+      metadata:
+        name: landing
+        namespace: jinz-staging
+
+  - target:
       kind: Ingress
       name: landing
       # namespace: jinz-base
