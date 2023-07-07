@@ -14,7 +14,7 @@ patches:
   - target:
       kind: Ingress
       name: landing
-      namespace: jinz-base
+      # namespace: jinz-base
     patch: |
       apiVersion: networking.k8s.io/v1
       kind: Ingress
