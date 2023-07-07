@@ -23,7 +23,7 @@ patches:
       kind: Deployment
       metadata:
         name: landing
-        namespace: jinz-staging
+        # namespace: jinz-staging
       spec:
         replicas: 1
         template:
@@ -41,7 +41,7 @@ patches:
       kind: Deployment
       metadata:
         name: webcrawler
-        namespace: jinz-staging
+        # namespace: jinz-staging
       spec:
         replicas: 3
 
@@ -65,7 +65,7 @@ patches:
       kind: Ingress
       metadata:
         name: landing
-        namespace: jinz-staging
+        # namespace: jinz-staging
       spec:
         rules:
         - host: staging.app.io

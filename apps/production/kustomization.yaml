@@ -1,8 +1,71 @@
 apiVersion: kustomize.config.k8s.io/v1beta1
 kind: Kustomization
 resources:
-  - ../base/podinfo
+  # - ../base/podinfo
+  - ../base/echo
+  - ../base/jinz
+  - ../base/landing
+  - ../base/nlp
+  - ../base/webcrawler
+namespace: jinz-prod # alter to namespace
 patches:
-  - path: podinfo-values.yaml
-    target:
-      kind: HelmRelease
+
+#   - path: podinfo-values.yaml
+#     target:
+#       kind: HelmRelease
+
+  - target:
+      kind: Deployment
+      name: landing
+      # namespace: jinz-base
+    patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: landing
+        namespace: jinz-staging
+      spec:
+        replicas: 1
+        template:
+          spec:
+            containers:
+              - name: landing
+                image: docker.iranrepo.ir/nginx:1.20
+
+  - target:
+      kind: Deployment
+      name: webcrawler
+      # namespace: jinz-base
+    patch: |
+      apiVersion: apps/v1
+      kind: Deployment
+      metadata:
+        name: webcrawler
+        namespace: jinz-staging
+      spec:
+        replicas: 3
+
+  # - target:
+  #     kind: Service
+  #     name: landing
+  #     # namespace: jinz-base
+  #   patch: |
+  #     apiVersion: v1
+  #     kind: Service
+  #     metadata:
+  #       name: landing
+  #       namespace: jinz-staging
+
+  - target:
+      kind: Ingress
+      name: landing
+      # namespace: jinz-base
+    patch: |
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: landing
+        namespace: jinz-staging
+      spec:
+        rules:
+        - host: staging.app.io
