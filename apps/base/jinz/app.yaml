@@ -7,7 +7,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: jinz
-  namespace: jinz-staging
+  namespace: jinz-base
 spec:
   replicas: 1
   selector:
@@ -33,7 +33,7 @@ apiVersion: v1
 kind: Service
 metadata:
   name: jinz
-  namespace: jinz-staging
+  namespace: jinz-base
 spec:
   ports:
   - name: http
@@ -48,7 +48,7 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: jinz
-  namespace: jinz-staging
+  namespace: jinz-base
   annotations:
     kubernetes.io/ingress.class: "nginx"
     # nginx.ingress.kubernetes.io/rewrite-target: /
