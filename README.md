@@ -44,24 +44,6 @@ The Git repository contains the following top directories:
     ├── production
     └── staging
 ```
-
-### Applications
-
-### Infrastructure
-
-## Bootstrap staging and production
-
-The clusters dir contains the Flux configuration:
-
-```
-./clusters/
-├── production
-│   ├── apps.yaml
-│   └── infrastructure.yaml
-└── staging
-    ├── apps.yaml
-    └── infrastructure.yaml
-```
 ## Initialize operation
 
 ### STAGE

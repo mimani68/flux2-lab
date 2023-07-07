@@ -37,10 +37,10 @@ spec:
         registry: docker.iranrepo.ir
       service:
         type: "NodePort"
-    admissionWebhooks:
-      enabled: false
-      patch:
+      admissionWebhooks:
         enabled: false
+        patch:
+          enabled: false
     defaultBackend:
       image:
         registry: docker.iranrepo.ir
