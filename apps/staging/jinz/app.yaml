@@ -25,7 +25,7 @@ spec:
         image: docker.iranrepo.ir/nginx:latest
         env:
           - name: SERVER_PORT
-            value: 4000
+            value: "4000"
         ports:
         - containerPort: 4000
 ---
