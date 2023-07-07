@@ -14,12 +14,13 @@ patches:
   - target:
       kind: Ingress
       name: landing
-      namespace: jinz-staging
+      namespace: jinz-base
     patch: |
       apiVersion: networking.k8s.io/v1
       kind: Ingress
       metadata:
         name: landing
+        namespace: jinz-staging
       spec:
         rules:
         - host: staging.app.io
