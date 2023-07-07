@@ -59,13 +59,59 @@ patches:
   - target:
       kind: Ingress
       name: landing
-      # namespace: jinz-base
     patch: |
       apiVersion: networking.k8s.io/v1
       kind: Ingress
       metadata:
         name: landing
-        # namespace: jinz-staging
       spec:
         rules:
         - host: staging.app.io
+
+  - target:
+      kind: Ingress
+      name: echo
+    patch: |
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: echo
+      spec:
+        rules:
+        - host: staging.app.io
+
+  - target:
+      kind: Ingress
+      name: jinz
+    patch: |
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: jinz
+      spec:
+        rules:
+        - host: api.staging.app.io
+
+  - target:
+      kind: Ingress
+      name: nlp
+    patch: |
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: nlp
+      spec:
+        rules:
+        - host: nlp.api.staging.app.io
+
+  - target:
+      kind: Ingress
+      name: webcrawler
+    patch: |
+      apiVersion: networking.k8s.io/v1
+      kind: Ingress
+      metadata:
+        name: webcrawler
+      spec:
+        rules:
+        - host: webcrawler.api.staging.app.io
